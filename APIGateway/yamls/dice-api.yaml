@@ -1,0 +1,31 @@
+swagger: '2.0'
+info:
+  title: API Gateway - Dice
+  version: '1.0'
+host: localhost
+schemes:
+  - http
+  - https
+produces:
+  - application/json
+  - text/html
+consumes:
+  - application/json
+paths:
+  /stories/new/settings:
+    get:
+      operationId: getSettingsPage
+      summary: blabla
+      description: blabla
+      responses:
+        '200':
+          description: OK
+
+  /stories/new/roll:
+    get:
+      operationId: getRollPage
+      summary: blabla
+      description: blabla
+      responses:
+        '200':
+          description: blabla

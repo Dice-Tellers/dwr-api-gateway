@@ -1,0 +1,75 @@
+swagger: '2.0'
+info:
+  title: API Gateway - Home
+  version: '1.0'
+host: localhost
+schemes:
+  - http
+  - https
+produces:
+  - text/html
+consumes:
+  - application/json
+paths:
+  /:
+    get:
+      operationId: home
+      responses:
+        '200':
+          description: getHomePage
+          
+  /register:
+    get:
+      operationId: getRegisterPage
+      summary: blabla
+      description: blabla
+      responses:
+        '200':
+          description: OK
+    post:
+      operationId: register
+      summary: blabla
+      description: blabla
+      responses:
+        '200':
+          description: OK
+          
+  /login:
+    get:
+      operationId: getLoginPage
+      summary: blabla
+      description: blabla
+      responses:
+        '200':
+          description: OK
+    post:
+      operationId: login
+      summary: Actually login
+      description: blabla
+      responses:
+        '200':
+          description: sei loggato (forse)
+            
+  /logout:
+    post:
+      operationId: logout
+      summary: blabla
+      description: blabla
+      responses:
+        '200':
+          description: sei sloggato (forse)
+          
+  /search:
+    get:
+      operationId: search
+      summary: blabla
+      description: blabla
+      responses:
+        '200':
+          description: blabla
+      parameters:
+        - in: query
+          name: query
+          required: true
+          type: string
+          
