@@ -1,9 +1,12 @@
 from flakon import SwaggerBlueprint
-from flask import render_template, request, redirect, url_for
+from flask import render_template, request, redirect, url_for, flash
+from flask_login import (login_user, logout_user, login_required)
 import requests          # requirements
 
-from monolith.forms import LoginForm, UserForm
-from monolith.urls import HOME_URL
+from APIGateway.classes.User import User
+from APIGateway.forms import LoginForm, UserForm
+from APIGateway.urls import HOME_URL
+
 
 authapi= SwaggerBlueprint('gateway', spec='auth-api.yml')
 usersapi = SwaggerBlueprint('users', spec='users-api.yml')
@@ -18,11 +21,14 @@ STORY_PORT = ':5003'
 
 #               Auth
 
+
 @authapi.operation('home')
 def _home():
-    x = requests.get(HOME_URL + AUTH_PORT)  # not sure about stories=data
+    s = requests.get(HOME_URL + STORY_PORT + '/stories')
+    x = requests.get(HOME_URL + AUTH_PORT)
     data = x.json()
-    return render_template("index.html", stories=data, home_url=HOME_URL)
+    stories = s.json()
+    return render_template("index.html", data=data, stories=stories, home_url=HOME_URL)
 
 
 @authapi.operation('getRegisterPage')
@@ -36,8 +42,8 @@ def _register():
     form = UserForm()
     x = requests.post(HOME_URL + AUTH_PORT + '/users/create')
     data = x.json()
-    if x.status_code == QUALCOSA:
-        flash('roba')
+    if x.status_code != 200:
+        flash('roba', 'error')
     return render_template("create_user.html", data=data, home_url=HOME_URL)
 
 
@@ -50,13 +56,17 @@ def _get_log():
 @authapi.operation('login')
 def _login():
     x = requests.post(HOME_URL + AUTH_PORT + '/users/login')
-    if x.status_code == QUALCOSA:
-        flash('roba') # e refresh stessa pagina
+    if x.status_code != 200:
+        flash('roba', 'error') # e refresh stessa pagina
+    user = User(x['user_id'])
+    login_user(user)
     return render_template('index.html', home_url=HOME_URL)
 
 
 @authapi.operation('logout')
+@login_required
 def _logout():
+    logout_user()
     x = requests.post(HOME_URL + AUTH_PORT + '/users/logout')
     redirect(url_for("_home"))
 
@@ -65,6 +75,7 @@ def _logout():
 def _search():
     x = requests.get(HOME_URL + AUTH_PORT + '/search')
     data = x.json()
+    # to be done
     return render_template("search.html", data=data, home_url=HOME_URL)
 
 
@@ -79,26 +90,31 @@ def _get_all():
 
 @usersapi.operation('getUser')
 def _get_user(id_user):
+    s = requests.get(HOME_URL + STORY_PORT + '/users/' + id_user + '/stories')
     x = requests.get(HOME_URL + USER_PORT + '/users/' + id_user)
     data = x.json()
-    return render_template("wall.html", data=data, home_url=HOME_URL)
+    stories = s.json()
+
+    return render_template("wall.html", data=data, stories=stories, home_url=HOME_URL)
 
 
 @usersapi.operation('followUser')
+@login_required
 def _follow_user(id_user):
     x = requests.post(HOME_URL + USER_PORT + '/users/' + id_user + '/follow')
     data = x.json()
-    if x.status_code == QUALCOSA:
+    if x.status_code != 200:
         flash('erur', 'error')
 
     return render_template("wall.html", data=data, home_url=HOME_URL)
 
 
 @usersapi.operation('unfollowUser')
+@login_required
 def _unfollow_user(id_user):
     x = requests.post(HOME_URL + USER_PORT + '/users/' + id_user + '/unfollow')
     data = x.json()
-    if x.status_code == QUALCOSA:
+    if x.status_code != 200:
         flash('erur', 'error')
 
     return render_template("wall.html", data=data, home_url=HOME_URL)
@@ -123,14 +139,18 @@ def _get_stories_of_user(id_user):
 #                   Dice
 
 @diceapi.operation('getSettingsPage')
+@login_required
 def _get_settings_page():
+    sets = requests.get(HOME_URL + DICE_PORT + '/sets/')
     x = requests.get(HOME_URL + DICE_PORT + '/stories/new/settings')
     data = x.json()
+    dice = sets.json()
 
-    return render_template("settings.html", data=data, home_url=HOME_URL)
+    return render_template("settings.html", data=data, dice=dice, home_url=HOME_URL)
 
 
 @diceapi.operation('getRollPage')
+@login_required
 def _get_roll_page():
     x = requests.get(HOME_URL + DICE_PORT + '/stories/new/roll')
     data = x.json()
@@ -167,6 +187,7 @@ def _get_range():
 
 
 @storiesapi.operation('getDrafts')
+@login_required
 def _get_drafts():
     x = requests.get(HOME_URL + STORY_PORT + '/stories/getDrafts')
     data = x.json()
@@ -183,6 +204,7 @@ def _get_story(id_story):
 
 
 @storiesapi.operation('writeNew')
+@login_required
 def _write_new():
     x = requests.get(HOME_URL + STORY_PORT + '/stories/new/write')
     data = x.json()
@@ -191,6 +213,7 @@ def _write_new():
 
 
 @storiesapi.operation('completeDraft')
+@login_required
 def _complete_draft(id_story):
     x = requests.get(HOME_URL + STORY_PORT + '/stories/new/write/' + id_story)
     data = x.json()
