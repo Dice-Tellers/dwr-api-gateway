@@ -1,8 +1,3 @@
-from .auth import auth
-from .dice import dice
-from .home import home
-from .search import search
-from .stories import stories
-from .users import users
+from .gateway import authapi, usersapi, diceapi, storiesapi
 
-blueprints = [home, auth, users, stories, dice, search]
+blueprints = [authapi, usersapi, diceapi, storiesapi]

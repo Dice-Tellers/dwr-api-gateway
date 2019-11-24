@@ -1,17 +1,19 @@
 from flakon import SwaggerBlueprint
 from flask import render_template, request, redirect, url_for, flash
 from flask_login import (login_user, logout_user, login_required)
-import requests          # requirements
+import requests
+import os
 
 from APIGateway.classes.User import User
 from APIGateway.forms import LoginForm, UserForm
 from APIGateway.urls import HOME_URL
 
+yml_path = os.path.join(os.path.dirname(__file__), '..', 'yamls')
 
-authapi= SwaggerBlueprint('gateway', spec='auth-api.yml')
-usersapi = SwaggerBlueprint('users', spec='users-api.yml')
-diceapi = SwaggerBlueprint('dice', spec='dice-api.yml')
-storiesapi = SwaggerBlueprint('stories', spec='stories-api.yml')
+authapi = SwaggerBlueprint('gateway', '__name__', swagger_spec=os.path.join(yml_path, 'auth-api.yaml'))
+usersapi = SwaggerBlueprint('users', '__name__', swagger_spec=os.path.join(yml_path,'users-api.yaml'))
+diceapi = SwaggerBlueprint('dice', '__name__', swagger_spec=os.path.join(yml_path,'dice-api.yaml'))
+storiesapi = SwaggerBlueprint('stories', '__name__', swagger_spec=os.path.join(yml_path,'stories-api.yaml'))
 
 
 AUTH_PORT = ':5000'

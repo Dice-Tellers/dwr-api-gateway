@@ -1,9 +1,8 @@
 from flask import Flask
 
-from monolith.auth import login_manager
-from monolith.database import db, ReactionCatalogue
-from monolith.urls import DEFAULT_DB
-from monolith.views import blueprints
+from APIGateway.auth import login_manager
+from APIGateway.urls import DEFAULT_DB
+from APIGateway.views import blueprints
 
 
 def create_app(database=DEFAULT_DB, wtf=False, login_disabled=False):
@@ -20,25 +19,7 @@ def create_app(database=DEFAULT_DB, wtf=False, login_disabled=False):
         flask_app.register_blueprint(bp)
         bp.app = flask_app
 
-    db.init_app(flask_app)
     login_manager.init_app(flask_app)
-    db.create_all(app=flask_app)
-
-    with flask_app.app_context():
-        # Possible reactions
-        if ReactionCatalogue.query.filter(ReactionCatalogue.reaction_caption == 'like').first() is None:
-            like = ReactionCatalogue()
-            like.reaction_id = 1
-            like.reaction_caption = 'like'
-            db.session.add(like)
-            db.session.commit()
-
-        if ReactionCatalogue.query.filter(ReactionCatalogue.reaction_caption == 'dislike').first() is None:
-            dislike = ReactionCatalogue()
-            dislike.reaction_id = 2
-            dislike.reaction_caption = 'dislike'
-            db.session.add(dislike)
-            db.session.commit()
 
     return flask_app
 
