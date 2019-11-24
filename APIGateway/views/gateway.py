@@ -1,6 +1,6 @@
 from flakon import SwaggerBlueprint
 from flask import render_template, request, redirect, url_for, flash
-from flask_login import (login_user, logout_user, login_required)
+from flask_login import (login_user, logout_user, login_required, current_user)
 import requests
 import os
 
@@ -20,16 +20,21 @@ AUTH_PORT = ':5000'
 USER_PORT = ':5001'
 DICE_PORT = ':5002'
 STORY_PORT = ':5003'
+REACTIONS = ':5004'
 
 #               Auth
 
 
 @authapi.operation('home')
 def _home():
-    s = requests.get(HOME_URL + STORY_PORT + '/stories')
-    x = requests.get(HOME_URL + AUTH_PORT)
-    data = x.json()
-    stories = s.json()
+    data = None
+    stories = None
+    if current_user is not None and hasattr(current_user, 'id'):
+        s = requests.get(HOME_URL + STORY_PORT + '/stories')
+        x = requests.get(HOME_URL + USER_PORT)
+        data = x.json()
+        stories = s.json()
+
     return render_template("index.html", data=data, stories=stories, home_url=HOME_URL)
 
 
@@ -42,7 +47,7 @@ def _get_reg():
 @authapi.operation('register')
 def _register():
     form = UserForm()
-    x = requests.post(HOME_URL + AUTH_PORT + '/users/create')
+    x = requests.post(HOME_URL + USER_PORT + '/users/create')
     data = x.json()
     if x.status_code != 200:
         flash('roba', 'error')
@@ -57,7 +62,7 @@ def _get_log():
 
 @authapi.operation('login')
 def _login():
-    x = requests.post(HOME_URL + AUTH_PORT + '/users/login')
+    x = requests.post(HOME_URL + USER_PORT + '/users/login')
     if x.status_code != 200:
         flash('roba', 'error') # e refresh stessa pagina
     user = User(x['user_id'])
@@ -69,13 +74,13 @@ def _login():
 @login_required
 def _logout():
     logout_user()
-    x = requests.post(HOME_URL + AUTH_PORT + '/users/logout')
+    x = requests.post(HOME_URL + USER_PORT + '/users/logout')
     redirect(url_for("_home"))
 
 
 @authapi.operation('search')
 def _search():
-    x = requests.get(HOME_URL + AUTH_PORT + '/search')
+    x = requests.get(HOME_URL + USER_PORT + '/search')
     data = x.json()
     # to be done
     return render_template("search.html", data=data, home_url=HOME_URL)
