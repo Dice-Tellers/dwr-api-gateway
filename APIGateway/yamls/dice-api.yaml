@@ -22,7 +22,7 @@ paths:
           description: OK
 
   /stories/new/roll:
-    get:
+    post:
       operationId: getRollPage
       summary: blabla
       description: blabla

@@ -1,8 +1,23 @@
+from werkzeug.security import generate_password_hash, check_password_hash
+
 
 class User:
 
-    def __init__(self, id):
+    is_active = True
+    is_anonymous = False
+    is_admin = False
+    id = -1
+    firstname = ""
+    lastname = ""
+    email = ""
+    password = ""
+
+    def __init__(self, id, firstname, lastname, email):
         self.id = id
+        self.firstname = firstname
+        self.lastname = lastname
+        self.email = email
+        self._authenticated = False
 
     def set_password(self, password):
         self.password = generate_password_hash(password)

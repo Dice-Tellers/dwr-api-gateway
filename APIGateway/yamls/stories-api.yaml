@@ -70,6 +70,14 @@ paths:
           
   /stories/new/write:
     get:
+      operationId: getWritePage
+      summary: blabla
+      description: blabla
+      responses:
+        '200':
+          description: OK
+
+    post:
       operationId: writeNew
       summary: Write a new story
       description: Write a new story.
@@ -79,6 +87,18 @@ paths:
       
   /stories/new/write/{id_story}:
     get:
+      operationId: getDraftPage
+      summary: blabla
+      description: blabla
+      responses:
+        '200':
+          description: OK
+      parameters:
+        - in: path
+          name: id_story
+          required: true
+          type: integer
+    post:
       operationId: completeDraft
       summary: Complete a draft
       description: Complete a precedently saved draft.
