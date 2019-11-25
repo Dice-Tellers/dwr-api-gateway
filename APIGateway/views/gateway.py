@@ -31,10 +31,11 @@ REACTION_PORT = ':5004'
 
 @authapi.operation('home')
 def _home():
-    stories = None
+    stories = []
     if current_user is not None and hasattr(current_user, 'id'):
-        s = requests.get(HOME_URL + STORY_PORT + '/stories')
-        stories = s.json()
+        s = requests.get(HOME_URL + STORY_PORT + '/stories/users/{}'.format(current_user.id))
+        if s.status_code < 300:
+            stories = s.json()
 
     return render_template("index.html", stories=stories, home_url=GATEWAY_URL)
 
