@@ -1,11 +1,10 @@
 import json
+import os
 
+import requests
 from flakon import SwaggerBlueprint
 from flask import render_template, request, redirect, url_for, flash, session
 from flask_login import (login_user, logout_user, login_required, current_user)
-import requests
-import os
-
 from werkzeug.exceptions import BadRequestKeyError
 
 from APIGateway.classes.User import User
@@ -24,7 +23,7 @@ GATEWAY_URL = HOME_URL + ':5000/'
 USER_PORT = ':5001'
 DICE_PORT = ':5002'
 STORY_PORT = ':5003'
-REACTIONS = ':5004'
+REACTION_PORT = ':5004'
 
 
 #               Auth
@@ -32,13 +31,9 @@ REACTIONS = ':5004'
 
 @authapi.operation('home')
 def _home():
-    data = None
     stories = None
-    print("current user stamp " + str(current_user))
     if current_user is not None and hasattr(current_user, 'id'):
         s = requests.get(HOME_URL + STORY_PORT + '/stories')
-        # x = requests.get(HOME_URL + USER_PORT)
-        # data = x.json()
         stories = s.json()
 
     return render_template("index.html", stories=stories, home_url=GATEWAY_URL)
@@ -204,7 +199,7 @@ def _get_roll_page():
         words = []
         dice_indexes = []
         for n, fig in body.items():
-            dice_indexes.append(int(n)-1)
+            dice_indexes.append(int(n) - 1)
             words.append(fig)
         session['figures'] = words
 
@@ -221,27 +216,30 @@ def _get_roll_page():
 @storiesapi.operation('getAll')
 def _get_all_stories():
     x = requests.get(HOME_URL + STORY_PORT + '/stories')
-    data = x.json()
+    stories = x.json()
 
-    return render_template("stories.html", data=data, home_url=GATEWAY_URL)
+    return render_template("stories.html", stories=stories, home_url=GATEWAY_URL)
 
 
 @storiesapi.operation('getLatest')
 def _get_latest():
     x = requests.get(HOME_URL + STORY_PORT + '/stories/latest')
-    data = x.json()
+    stories = x.json()
 
-    return render_template("stories.html", data=data, home_url=GATEWAY_URL)
+    return render_template("stories.html", stories=stories, home_url=GATEWAY_URL)
 
 
 @storiesapi.operation('getRange')
 def _get_range():
     begin = request.args.get('begin')
     end = request.args.get('end')
-    x = requests.get(HOME_URL + STORY_PORT + '/stories/range?begin=' + begin + '&end=' + end)
-    data = x.json()
-
-    return render_template("stories.html", data=data, home_url=GATEWAY_URL)
+    x = requests.get(HOME_URL + STORY_PORT + '/stories/range?begin={}&end={}'.format(begin, end))
+    body = x.json()
+    if x.status_code < 300:
+        return render_template("stories.html", stories=body, home_url=GATEWAY_URL)
+    else:
+        flash(body['description'])
+        return redirect(url_for('stories._get_all_stories'))
 
 
 @storiesapi.operation('getDrafts')
@@ -255,10 +253,18 @@ def _get_drafts():
 
 @storiesapi.operation('getStory')
 def _get_story(id_story):
-    x = requests.get(HOME_URL + STORY_PORT + '/stories/' + id_story)
-    data = x.json()
+    x = requests.get(HOME_URL + STORY_PORT + '/stories/{}'.format(id_story))
+    body = x.json()
+    return render_story(body)
 
-    return render_template("story.html", data=data, home_url=GATEWAY_URL)
+
+@storiesapi.operation('deleteStory')
+def _delete_story(id_story):
+    x = requests.delete(HOME_URL + STORY_PORT + '/stories/{}'.format(id_story), json={'user_id': current_user.id})
+    print(x.status_code)
+    body = x.json()
+    flash(body['description'])
+    return redirect(url_for('gateway._home'))
 
 
 @storiesapi.operation('getWritePage')
@@ -269,7 +275,8 @@ def _get_write_page():
         flash("You need to set a story before", 'error')
         redirect(url_for('gateway._home'))
 
-    return render_template("write_story.html", form=form, words=session['figures'], home_url=GATEWAY_URL)
+    return render_template("write_story.html", form=form, id_draft=None, words=session['figures'], home_url=GATEWAY_URL)
+
 
 @storiesapi.operation('writeNew')
 @login_required
@@ -309,21 +316,79 @@ def _get_draft_page(id_story):
     else:
         flash(body['description'], 'error')
         return redirect(url_for('gateway._home'))
-    return render_template("write_story.html", form=form, words=session['figures'][1:-1], home_url=GATEWAY_URL)
+
+    return render_template("write_story.html", form=form, id_draft=id_story, words=session['figures'][1:-1],
+                           home_url=GATEWAY_URL)
 
 
 @storiesapi.operation('completeDraft')
 @login_required
 def _complete_draft(id_story):
-    x = requests.put(HOME_URL + STORY_PORT + '/stories/{}'.format(id_story))
-    data = x.json()
+    form = request.form
+    figures = '#' + '#'.join(session['figures']) + '#'
+    data = {"as_draft": bool(int(form['as_draft'])), "text": form['text'],
+            "user_id": current_user.id, "figures": figures}
 
-    return render_template("write_story.html", data=data, home_url=GATEWAY_URL)
+    x = requests.put(HOME_URL + STORY_PORT + '/stories/{}'.format(id_story), json=data)
+    body = x.json()
+
+    if x.status_code < 300:
+        session.pop('figures')
+        return redirect(url_for('stories._get_all_stories'))
+    else:
+        new_form = StoryForm()
+        new_form.text.data = form['text']
+        return render_template("write_story.html", message=body['description'],
+                               form=new_form, id_draft=id_story, words=session['figures'][1:-1], home_url=GATEWAY_URL)
 
 
 @storiesapi.operation('getRandom')
 def _get_random():
-    x = requests.get(HOME_URL + STORY_PORT + '/stories/random')
-    data = x.json()
+    method = '/stories/random'
+    if current_user is not None and hasattr(current_user, 'id'):
+        method += '?=user_id{}'.format(current_user.id)
 
-    return render_template("story.html", data=data, home_url=GATEWAY_URL)
+    x = requests.get(HOME_URL + STORY_PORT + method)
+    body = x.json()
+    if x.status_code < 300:
+        return render_story(body)
+    else:
+        flash(body['description'], "error")
+
+    return redirect(url_for("stories._get_all_stories"))
+
+
+@storiesapi.operation('reactStory')
+@login_required
+def _react_story(id_story, reaction_caption):
+    data = {"story_id": id_story, "reaction_caption": reaction_caption, "current_user": current_user.id}
+
+    x = requests.post(HOME_URL + REACTION_PORT + "/react", json=data)
+    body = x.json()
+
+    flash(body['description'])
+    s = requests.get(HOME_URL + STORY_PORT + "/stories/{}".format(id_story))
+    print(s.status_code)
+    if s.status_code < 300:
+        return redirect(url_for('stories._get_story', id_story=id_story))
+    else:
+        flash("Error retrieving story!", 'error')
+        return redirect(url_for('gateway._home'))
+
+
+def render_story(story=None):
+    context_vars = {"home_url": GATEWAY_URL, "react_url": GATEWAY_URL + 'stories/{}/react',
+                    "exists": (story is not None)}
+    if story:
+        u = requests.get(HOME_URL + USER_PORT + "/users/{}".format(story['author_id']))
+        if u.status_code < 300:
+            r = requests.get(HOME_URL + REACTION_PORT + '/reactions/stats/{}'.format(story['id']))
+            if r.status_code < 300:
+                rolled_dice = story['figures'].split('#')
+                rolled_dice = rolled_dice[1:-1]
+                context_vars.update({"rolled_dice": rolled_dice, "story": story,
+                                     "user": u.json(), "reactions": r.json()})
+        else:
+            flash("Can't find author of this story", "error")
+            return redirect(url_for('stories._get_all_stories'))
+    return render_template("story.html", **context_vars)

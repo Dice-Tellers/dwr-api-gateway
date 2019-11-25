@@ -53,12 +53,44 @@ paths:
       responses:
         '200':
           description: OK
-          
+
   /stories/{id_story}:
     get:
       operationId: getStory
       summary: Get a specific story
       description: Get a non-draft specific story.
+      responses:
+        '200':
+          description: OK
+      parameters:
+        - in: path
+          name: id_story
+          required: true
+          type: integer
+
+  /stories/{id_story}/react/{reaction_caption}:
+    get:
+      operationId: reactStory
+      summary: React a story
+      description: React a story
+      responses:
+        '200':
+          description: OK
+      parameters:
+        - in: path
+          name: id_story
+          required: true
+          type: integer
+        - in: path
+          name: reaction_caption
+          required: true
+          type: string
+
+  /stories/{id_story}/delete:
+    post:
+      operationId: deleteStory
+      summary: Delete a story
+      description: Delete a story
       responses:
         '200':
           description: OK

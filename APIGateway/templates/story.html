@@ -38,8 +38,8 @@
             </div>
             <div style="margin: 0 auto;">
                 <b>Reactions:</b><br/>
-                {% for r in reactions %}
-                    <b><a href="{{ react_url.format(story.id) }}/{{ r[0] }}">{{ r[0].title() }}</a></b>: {{ r[1] }}
+                {% for r,c in reactions.items() %}
+                    <b><a href="{{ react_url.format(story.id) }}/{{ r }}">{{ r.title() }}</a></b>: {{ c }}
                 {% endfor %}
             </div>
             <br/>
