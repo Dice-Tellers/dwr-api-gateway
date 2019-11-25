@@ -346,7 +346,7 @@ def _complete_draft(id_story):
 def _get_random():
     method = '/stories/random'
     if current_user is not None and hasattr(current_user, 'id'):
-        method += '?=user_id{}'.format(current_user.id)
+        method += '?user_id={}'.format(current_user.id)
 
     x = requests.get(HOME_URL + STORY_PORT + method)
     body = x.json()
