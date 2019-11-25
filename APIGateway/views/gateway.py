@@ -48,21 +48,21 @@ def _get_reg():
 
 @authapi.operation('register')
 def _register():
-    form = request.form
-    data = ({"firstname": form['firstname'],
-             "lastname": form['lastname'],
-             "password": form['password'],
-             "email": form['email'],
-             "dateofbirth": str(form['dateofbirth'])})
-    x = requests.post(HOME_URL + USER_PORT + '/users/create', data=json.dumps(data))
-    body = x.json()
-    print(x.status_code)
-    if x.status_code < 300:
-        return redirect(url_for("users._get_all_users"))
-    else:
-        flash(body['description'], 'error')
+    form = UserForm()
+    if form.validate_on_submit():
+        data = ({"firstname": form.data['firstname'],
+                 "lastname": form.data['lastname'],
+                 "password": form.data['password'],
+                 "email": form.data['email'],
+                 "dateofbirth": str(form.data['dateofbirth'])})
+        x = requests.post(HOME_URL + USER_PORT + '/users/create', data=json.dumps(data))
+        body = x.json()
+        if x.status_code < 300:
+            return redirect(url_for("users._get_all_users"))
+        else:
+            flash(body['description'], 'error')
 
-    return redirect(url_for("gateway._get_reg"))
+    return render_template("create_user.html", form=form, home_url=GATEWAY_URL)
 
 
 @authapi.operation('getLoginPage')
