@@ -57,9 +57,7 @@ def _get_user(id_user):
 @login_required
 def _follow_user(id_user):
     x = requests.post(USER_URL + '/users/{}/follow?current_user_id={}'.format(id_user, current_user.id))
-    print(x.status_code)
     if check_service_up(x):
-        print("AAA")
         body = x.json()
         if x.status_code <= 500:
             flash(body['description'], 'error')
