@@ -127,14 +127,18 @@ def _get_search():
 def _search():
     form = request.form
     query = form['query']
+    users_data = []
+    stories_data = []
 
     try:
         # Search in users
         users_req = requests.get(USER_URL + '/search?query=' + query)
-        users_data = users_req.json()
+        if users_req.status_code != 204 and users_req.status_code < 300:
+            users_data = users_req.json()
         # Search in stories
-        stories_req = requests.get(USER_URL + '/search?query=' + query)
-        stories_data = stories_req.json()
+        stories_req = requests.get(STORY_URL + '/search?query=' + query)
+        if stories_req.status_code != 204 and stories_req.status_code < 300:
+            stories_data = stories_req.json()
     except requests.exceptions.ConnectionError:
         return service_not_up()
 
@@ -146,11 +150,11 @@ def _search():
         context_vars = {"list_of_users": users_data, "list_of_stories": stories_data,
                         "home_url": GATEWAY_URL}
         return render_template("search.html", **context_vars)
-    elif users_req.status_code not in ok_response or \
-            stories_req.status_code not in ok_response:
+    elif users_req.status_code not in ok_response or stories_req.status_code not in ok_response:
         flash(stories_data['description'], 'error')
         return redirect(url_for('gateway._search'), 304)
     else:
         context_vars = {"list_of_users": users_data, "list_of_stories": stories_data,
                         "home_url": GATEWAY_URL}
+        print(users_data, stories_data)
         return render_template("search.html", **context_vars)

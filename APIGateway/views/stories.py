@@ -150,7 +150,7 @@ def _write_new():
         else:
             new_form = StoryForm()
             new_form.text.data = form['text']
-            return render_template("write_story.html", message=body['description'],
+            return render_template("write_story.html", message=body['description'], id_draft=None,
                                    form=new_form, words=session['figures'], home_url=GATEWAY_URL)
     else:
         return redirect(url_for('gateway._home'))

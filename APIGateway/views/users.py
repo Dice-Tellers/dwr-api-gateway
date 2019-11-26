@@ -11,7 +11,10 @@ usersapi = SwaggerBlueprint('users', '__name__', swagger_spec=os.path.join(YML_P
 # Renders a page (users.html) with a list of all the users
 @usersapi.operation('getAll')
 def _get_all_users():
-    x = requests.get(USER_URL + '/users')
+    try:
+        x = requests.get(USER_URL + '/users')
+    except requests.exceptions.ConnectionError:
+        return service_not_up()
     users = []
 
     if check_service_up(x):
@@ -23,18 +26,30 @@ def _get_all_users():
 # Renders a page (wall.html) with the wall of a specified user
 @usersapi.operation('getUser')
 def _get_user(id_user):
-    u = requests.get(USER_URL + '/users/{}'.format(id_user))
+    try:
+        u = requests.get(USER_URL + '/users/{}'.format(id_user))
+    except requests.exceptions.ConnectionError:
+        return service_not_up()
 
     if u.status_code < 300:
         user = u.json()
-        fs = requests.get(USER_URL + '/users/{}/stats'.format(id_user))
-        followers_stats = fs.json()
+        try:
+            fs = requests.get(USER_URL + '/users/{}/stats'.format(id_user))
+            followers_stats = fs.json()
+        except requests.exceptions.ConnectionError:
+            return service_not_up()
 
         if fs.status_code < 300:
-            ss = requests.get(STORY_URL + '/stories/stats/{}'.format(id_user))
+            try:
+                ss = requests.get(STORY_URL + '/stories/stats/{}'.format(id_user))
+            except requests.exceptions.ConnectionError:
+                return service_not_up()
             if ss.status_code < 300:
                 stories_stats = ss.json()
-                rs = requests.get(USER_URL + '/reactions/stats/user/{}'.format(id_user))
+                try:
+                    rs = requests.get(USER_URL + '/reactions/stats/user/{}'.format(id_user))
+                except requests.exceptions.ConnectionError:
+                    return service_not_up()
                 if rs.status_code < 300:
                     reactions_stats = rs.json()
                 else:
@@ -56,7 +71,10 @@ def _get_user(id_user):
 @usersapi.operation('followUser')
 @login_required
 def _follow_user(id_user):
-    x = requests.post(USER_URL + '/users/{}/follow?current_user_id={}'.format(id_user, current_user.id))
+    try:
+        x = requests.post(USER_URL + '/users/{}/follow?current_user_id={}'.format(id_user, current_user.id))
+    except requests.exceptions.ConnectionError:
+        return service_not_up()
     if check_service_up(x):
         body = x.json()
         if x.status_code <= 500:
@@ -69,7 +87,10 @@ def _follow_user(id_user):
 @usersapi.operation('unfollowUser')
 @login_required
 def _unfollow_user(id_user):
-    x = requests.post(USER_URL + '/users/{}/unfollow?current_user_id={}'.format(id_user, current_user.id))
+    try:
+        x = requests.post(USER_URL + '/users/{}/unfollow?current_user_id={}'.format(id_user, current_user.id))
+    except requests.exceptions.ConnectionError:
+        return service_not_up()
 
     if check_service_up(x):
         body = x.json()
@@ -82,7 +103,10 @@ def _unfollow_user(id_user):
 # Get a list of all the followers of a specified user
 @usersapi.operation('getFollowers')
 def _get_followers(id_user):
-    x = requests.get(USER_URL + '/users/' + id_user + '/followers')
+    try:
+        x = requests.get(USER_URL + '/users/' + id_user + '/followers')
+    except requests.exceptions.ConnectionError:
+        return service_not_up()
     followers = []
 
     if check_service_up(x):
@@ -94,7 +118,10 @@ def _get_followers(id_user):
 # Get all the posted stories of a specified user
 @usersapi.operation('getStoriesOfUser')
 def _get_stories_of_user(id_user):
-    s = requests.get(STORY_URL + '/stories/users/{}'.format(id_user))
+    try:
+        s = requests.get(STORY_URL + '/stories/users/{}'.format(id_user))
+    except requests.exceptions.ConnectionError:
+        return service_not_up()
     stories = []
     if s.status_code < 300:
         stories = s.json()
