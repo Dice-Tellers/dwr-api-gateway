@@ -13,7 +13,11 @@ storiesapi = SwaggerBlueprint('stories', '__name__', swagger_spec=os.path.join(Y
 # Renders the Stories page (stories.html), where ALL the published stories are seen
 @storiesapi.operation('getAll')
 def _get_all_stories():
-    x = requests.get(STORY_URL + '/stories')
+    try:
+        x = requests.get(STORY_URL + '/stories')
+    except requests.exceptions.ConnectionError:
+        return service_not_up()
+
     stories = []
 
     if check_service_up(x):
@@ -25,7 +29,10 @@ def _get_all_stories():
 # Renders the Stories page (stories.html) with only the last published story for each registered user
 @storiesapi.operation('getLatest')
 def _get_latest():
-    x = requests.get(STORY_URL + '/stories/latest')
+    try:
+        x = requests.get(STORY_URL + '/stories/latest')
+    except requests.exceptions.ConnectionError:
+        return service_not_up()
     stories = []
 
     if check_service_up(x):
@@ -40,7 +47,10 @@ def _get_range():
     # Get the begin and end date to put it into the query
     begin = request.args.get('begin')
     end = request.args.get('end')
-    x = requests.get(STORY_URL + '/stories/range?begin={}&end={}'.format(begin, end))
+    try:
+        x = requests.get(STORY_URL + '/stories/range?begin={}&end={}'.format(begin, end))
+    except requests.exceptions.ConnectionError:
+        return service_not_up()
     if check_service_up(x):
         body = x.json()
 
@@ -58,7 +68,10 @@ def _get_range():
 @storiesapi.operation('getDrafts')
 @login_required
 def _get_drafts():
-    s = requests.get(STORY_URL + '/stories/drafts?user_id={}'.format(current_user.id))
+    try:
+        s = requests.get(STORY_URL + '/stories/drafts?user_id={}'.format(current_user.id))
+    except requests.exceptions.ConnectionError:
+        return service_not_up()
     stories = []
     if s.status_code < 300:
         stories = s.json()
@@ -69,7 +82,10 @@ def _get_drafts():
 # Renders the Story page (story.html) with the specified story
 @storiesapi.operation('getStory')
 def _get_story(id_story):
-    x = requests.get(STORY_URL + '/stories/{}'.format(id_story))
+    try:
+        x = requests.get(STORY_URL + '/stories/{}'.format(id_story))
+    except requests.exceptions.ConnectionError:
+        return service_not_up()
 
     if check_service_up(x):
         body = x.json()
@@ -81,7 +97,10 @@ def _get_story(id_story):
 # The operation to delete a previously published story
 @storiesapi.operation('deleteStory')
 def _delete_story(id_story):
-    x = requests.delete(STORY_URL + '/stories/{}'.format(id_story), json={'user_id': current_user.id})
+    try:
+        x = requests.delete(STORY_URL + '/stories/{}'.format(id_story), json={'user_id': current_user.id})
+    except requests.exceptions.ConnectionError:
+        return service_not_up()
 
     if check_service_up(x):
         body = x.json()
@@ -112,7 +131,10 @@ def _write_new():
     figures = '#' + '#'.join(session['figures']) + '#'
     data = {"as_draft": bool(int(form['as_draft'])), "text": form['text'],
             "user_id": current_user.id, "figures": figures}
-    x = requests.post(STORY_URL + '/stories', json=data)
+    try:
+        x = requests.post(STORY_URL + '/stories', json=data)
+    except requests.exceptions.ConnectionError:
+        return service_not_up()
 
     if check_service_up(x):
         body = x.json()
@@ -139,7 +161,10 @@ def _write_new():
 @login_required
 def _get_draft_page(id_story):
     form = StoryForm()
-    x = requests.get(STORY_URL + '/stories/{}'.format(id_story))
+    try:
+        x = requests.get(STORY_URL + '/stories/{}'.format(id_story))
+    except requests.exceptions.ConnectionError:
+        return service_not_up()
 
     if check_service_up(x):
         body = x.json()
@@ -169,7 +194,10 @@ def _complete_draft(id_story):
     data = {"as_draft": bool(int(form['as_draft'])), "text": form['text'],
             "user_id": current_user.id, "figures": figures}
 
-    x = requests.put(STORY_URL + '/stories/{}'.format(id_story), json=data)
+    try:
+        x = requests.put(STORY_URL + '/stories/{}'.format(id_story), json=data)
+    except requests.exceptions.ConnectionError:
+        return service_not_up()
 
     if check_service_up(x):
         body = x.json()
@@ -195,7 +223,10 @@ def _get_random():
     if current_user is not None and hasattr(current_user, 'id'):
         method += '?user_id={}'.format(current_user.id)
 
-    x = requests.get(STORY_URL + method)
+    try:
+        x = requests.get(STORY_URL + method)
+    except requests.exceptions.ConnectionError:
+        return service_not_up()
 
     if check_service_up(x):
         body = x.json()
@@ -215,8 +246,11 @@ def _get_random():
 @login_required
 def _react_story(id_story, reaction_caption):
     r_task = reaction_task.delay(id_story, reaction_caption, current_user.id)
-    print(r_task)
-    s = requests.get(STORY_URL + "/stories/{}".format(id_story))
+
+    try:
+        s = requests.get(STORY_URL + "/stories/{}".format(id_story))
+    except requests.exceptions.ConnectionError:
+        return service_not_up()
 
     if check_service_up(s):
         if s.status_code < 300:
@@ -233,10 +267,16 @@ def render_story(story=None):
     context_vars = {"home_url": GATEWAY_URL, "react_url": GATEWAY_URL + 'stories/{}/react',
                     "exists": (story is not None)}
     if story:
-        u = requests.get(USER_URL + "/users/{}".format(story['author_id']))
+        try:
+            u = requests.get(USER_URL + "/users/{}".format(story['author_id']))
+        except requests.exceptions.ConnectionError:
+            return service_not_up()
 
         if u.status_code < 300:
-            r = requests.get(REACTION_URL + '/reactions/stats/{}'.format(story['id']))
+            try:
+                r = requests.get(REACTION_URL + '/reactions/stats/{}'.format(story['id']))
+            except requests.exceptions.ConnectionError:
+                return service_not_up()
 
             if r.status_code < 300:
                 rolled_dice = story['figures'].split('#')

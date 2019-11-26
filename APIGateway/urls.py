@@ -1,7 +1,7 @@
 # Global URLS for extensibility
 import os
 
-from flask import flash
+from flask import flash, redirect, url_for
 
 HOME_URL = 'http://127.0.0.1'
 GATEWAY_URL = HOME_URL + ':5000/'
@@ -29,6 +29,11 @@ YML_PATH = os.path.join(os.path.dirname(__file__), 'yamls')
 
 def check_service_up(response):
     if response.status_code == 500:
-        flash('The requested microservice is not up.', 'error')
+        flash('The requested microservice has encountered an Internal Server error.', 'error')
         return False
     return True
+
+
+def service_not_up():
+    flash('A requested microservice is not up', 'error')
+    return redirect(url_for('gateway._home'))

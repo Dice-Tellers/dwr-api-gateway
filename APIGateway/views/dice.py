@@ -13,7 +13,10 @@ diceapi = SwaggerBlueprint('dice', '__name__', swagger_spec=os.path.join(YML_PAT
 @diceapi.operation('getSettingsPage')
 @login_required
 def _get_settings_page():
-    x = requests.get(DICE_URL + '/sets')
+    try:
+        x = requests.get(DICE_URL + '/sets')
+    except requests.exceptions.ConnectionError:
+        return service_not_up()
 
     if check_service_up(x):
         # No dice sets are loaded into the dice microservice
@@ -53,7 +56,10 @@ def _get_roll_page():
 
     # Actually roll the dice
     data = {'dice_number': dice_number}
-    x = requests.post(DICE_URL + '/sets/{}/roll'.format(id_set), json=data)
+    try:
+        x = requests.post(DICE_URL + '/sets/{}/roll'.format(id_set), json=data)
+    except requests.exceptions.ConnectionError:
+        return service_not_up()
 
     if check_service_up(x):
         body = x.json()

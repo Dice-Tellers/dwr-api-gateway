@@ -21,7 +21,10 @@ def _home():
 
     # If there's a logged user, we get his stories
     if current_user is not None and hasattr(current_user, 'id'):
-        s = requests.get(STORY_URL + '/stories/users/{}'.format(current_user.id))
+        try:
+            s = requests.get(STORY_URL + '/stories/users/{}'.format(current_user.id))
+        except requests.exceptions.ConnectionError:
+            return service_not_up()
 
         if check_service_up(s):
             if s.status_code < 300:
@@ -49,7 +52,10 @@ def _register():
                  "password": form.data['password'],
                  "email": form.data['email'],
                  "dateofbirth": str(form.data['dateofbirth'])})
-        x = requests.post(USER_URL + '/users/create', data=json.dumps(data))
+        try:
+            x = requests.post(USER_URL + '/users/create', data=json.dumps(data))
+        except requests.exceptions.ConnectionError:
+            return service_not_up()
 
         if check_service_up(x):
             body = x.json()
@@ -80,7 +86,10 @@ def _login():
     # Get input data, then send it to the Users microservice
     data = ({"email": form['email'],
              "password": form['password']})
-    x = requests.post(USER_URL + '/users/login', data=json.dumps(data))
+    try:
+        x = requests.post(USER_URL + '/users/login', data=json.dumps(data))
+    except requests.exceptions.ConnectionError:
+        return service_not_up()
 
     if check_service_up(x):
         body = x.json()
@@ -112,6 +121,10 @@ def _logout():
 # TODO Search
 @authapi.operation('search')
 def _search():
-    x = requests.get(USER_URL + '/search')
+    try:
+        x = requests.get(USER_URL + '/search')
+    except requests.exceptions.ConnectionError:
+        return service_not_up()
+
     data = x.json()
     return render_template("search.html", data=data, home_url=GATEWAY_URL)
