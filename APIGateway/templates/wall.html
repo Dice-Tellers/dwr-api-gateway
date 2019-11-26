@@ -34,17 +34,26 @@
                         <b>Statistics:</b>
                         <table style="margin: 0 auto; text-align: center;">
                             <tr>
-                                <td>{{ stats[2][1] }}</td>
+                                <td>{{ stats["stories_stats"]["num_stories"] }}</td>
                                 <td rowspan="2">&nbsp;</td>
-                                <td>{{ stats[1][1] }}</td>
+                                <td>{{ stats.reactions_stats.tot_num_reactions }}</td>
                                 <td rowspan="2">&nbsp;</td>
-                                <td>{{ stats[0][1] }}</td>
+                                <td>{{ stats.stories_stats.tot_num_dice }}</td>
                                 <td rowspan="2">&nbsp;</td>
-                                <td>{{ stats[3][1] }}</td>
+                                <td>{{ stats.follower_stats.num_followers }}</td>
+                                <td rowspan="2">&nbsp;</td>
+                                <td>{{ stats.follower_stats.follower_last_month }}</td>
+                                <td rowspan="2">&nbsp;</td>
+                                <td>{{ stats.reactions_stats.avg_reactions }}</td>
+                                <td rowspan="2">&nbsp;</td>
+                                <td>{{ stats.stories_stats.avg_dice }}</td>
                             </tr>
                             <tr>
                                 <td><b># Stories</b></td>
                                 <td><b># Reactions</b></td>
+                                <td><b># Total Dice</b></td>
+                                <td><b># Followers</b></td>
+                                <td><b>Followers of last month</b></td>
                                 <td><b>Avg reactions per story</b></td>
                                 <td><b>Avg dice per story</b></td>
                             </tr>
@@ -107,13 +116,13 @@
                         <b>Statistics:</b>
                         <table style="margin: 0 auto; text-align: center;">
                             <tr>
-                                <td>{{ stats[1][1] }}</td>
+                                <td>{{ stats.stories_stats.num_stories }}</td>
                                 <td rowspan="2">&nbsp;</td>
-                                <td>{{ stats[0][1] }}</td>
+                                <td>{{ stats.follower_stats.num_followers }}</td>
                             </tr>
                             <tr>
                                 <td><b># Stories</b></td>
-                                <td><b># Reactions</b></td>
+                                <td><b># Followers</b></td>
                             </tr>
                         </table>
                     </div>
@@ -148,13 +157,13 @@
                     <b>Statistics:</b>
                     <table style="margin: 0 auto; text-align: center;">
                         <tr>
-                            <td>{{ stats[1][1] }}</td>
+                            <td>{{ stats.stories_stats.num_stories }}</td>
                             <td rowspan="2">&nbsp;</td>
-                            <td>{{ stats[0][1] }}</td>
+                            <td>{{ stats.follower_stats.num_followers }}</td>
                         </tr>
                         <tr>
                             <td><b># Stories</b></td>
-                            <td><b># Reactions</b></td>
+                            <td><b># Followers</b></td>
                         </tr>
                     </table>
                 </div>

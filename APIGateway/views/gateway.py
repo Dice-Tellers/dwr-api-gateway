@@ -3,7 +3,7 @@ import os
 
 import requests
 from flakon import SwaggerBlueprint
-from flask import render_template, request, redirect, url_for, flash, session
+from flask import render_template, request, redirect, url_for, flash, session, jsonify
 from flask_login import (login_user, logout_user, login_required, current_user)
 from werkzeug.exceptions import BadRequestKeyError
 
@@ -114,12 +114,28 @@ def _get_all_users():
 
 @usersapi.operation('getUser')
 def _get_user(id_user):
-    s = requests.get(HOME_URL + STORY_PORT + '/users/' + id_user + '/stories')
-    x = requests.get(HOME_URL + USER_PORT + '/users/' + id_user)
-    data = x.json()
-    stories = s.json()
+    user = requests.get(HOME_URL + USER_PORT + '/users/' + id_user)
+    data = user.json()
+    user_endpoint = requests.get(HOME_URL + USER_PORT + '/users/' + id_user + '/stats')
+    followers_stats = user_endpoint.json()
 
-    return render_template("wall.html", data=data, stories=stories, home_url=GATEWAY_URL)
+    # user_endpoint returns 404 if the user id doesn't exist
+    print('Status code calling user service: ' + str(user_endpoint.status_code))
+    if user_endpoint.status_code < 300:
+        stories_endpoint = requests.get(HOME_URL + STORY_PORT + '/stories/stats/' + id_user)
+        stories_stats = stories_endpoint.json()
+        reactions_endpoint = requests.get(HOME_URL + REACTION_PORT + '/reactions/stats/user/' + id_user)
+        if reactions_endpoint.status_code < 300:
+            reactions_stats = reactions_endpoint.json()
+        else:
+            reactions_stats = {"tot_num_reactions": 0, "avg_reactions": 0.0}
+        
+        json_stats = {'follower_stats': followers_stats, 'stories_stats': stories_stats, 'reactions_stats': reactions_stats}
+        
+        return render_template("wall.html", user_info=data, stats=jsonify(json_stats), home_url=GATEWAY_URL)
+    else:
+        flash('erur', 'error')
+        return render_template("wall.html", not_found=True, home_url=GATEWAY_URL)
 
 
 @usersapi.operation('followUser')
