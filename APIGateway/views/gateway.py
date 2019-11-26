@@ -98,13 +98,38 @@ def _logout():
     logout_user()
     return redirect(url_for("gateway._home"))
 
+@authapi.operation('getSearchPage')
+def _get_search():
+    return render_template('search.html', home_url=GATEWAY_URL)
 
 @authapi.operation('search')
 def _search():
-    x = requests.get(HOME_URL + USER_PORT + '/search')
-    data = x.json()
-    # to be done
-    return render_template("search.html", data=data, home_url=GATEWAY_URL)
+    form = request.form
+    query = form['query']
+
+    # Search in users
+    users_req = requests.get(HOME_URL + USER_PORT + '/search?query=' + query)
+    users_data = users_req.json()
+    # Search in stories
+    stories_req = requests.get(HOME_URL + STORY_PORT + '/search?query=' + query)
+    stories_data = stories_req.json()
+
+    ok_response = [200, 204]
+
+    # Check if both are succesfull
+    if users_req.status_code == 204 and stories_req.status_code == 204:
+        flash("No match for the searched string", 'error')
+        context_vars = {"list_of_users": users_data, "list_of_stories": stories_data,
+                        "home_url": GATEWAY_URL}
+        return render_template("search.html", **context_vars)
+    elif users_req.status_code not in ok_response or \
+        stories_req.status_code not in ok_response:
+        flash(stories_data['descrption'], 'error')
+        return redirect(url_for('gateway._search'), 304)
+    else:
+        context_vars = {"list_of_users": users_data, "list_of_stories": stories_data,
+                        "home_url": GATEWAY_URL}
+        return render_template("search.html", **context_vars)
 
 
 #               Users
