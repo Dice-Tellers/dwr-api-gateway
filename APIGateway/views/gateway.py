@@ -25,11 +25,17 @@ HOME_URL = 'http://127.0.0.1'
 # The URL of the API Gateway
 GATEWAY_URL = HOME_URL + ':5000/'
 
+# Ports for other microservices
+USER_PORT = ':5001'
+DICE_PORT = ':5002'
+STORY_PORT = ':5003'
+REACTION_PORT = ':5004'
+
 # URLS for other microservices
-USER_URL = HOME_URL + ':5001'
-DICE_URL = HOME_URL + ':5002'
-STORY_URL = HOME_URL + ':5003'
-REACTION_URL = HOME_URL + ':5004'
+USER_URL = HOME_URL + USER_PORT
+DICE_URL = HOME_URL + DICE_PORT
+STORY_URL = HOME_URL + STORY_PORT
+REACTION_URL = HOME_URL + REACTION_PORT
 
 
 #               Auth microservice
