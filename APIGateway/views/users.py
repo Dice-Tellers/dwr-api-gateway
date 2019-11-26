@@ -31,66 +31,66 @@ def _get_user(id_user):
         followers_stats = fs.json()
 
         if fs.status_code < 300:
-            ss = requests.get(USER_URL + '/stories/stats/{}'.format(id_user))
-            stories_stats = ss.json()
-            rs = requests.get(USER_URL + '/reactions/stats/user/{}'.format(id_user))
-            if rs.status_code < 300:
-                reactions_stats = rs.json()
-            else:
-                reactions_stats = {"tot_num_reactions": 0, "avg_reactions": 0.0}
+            ss = requests.get(STORY_URL + '/stories/stats/{}'.format(id_user))
+            if ss.status_code < 300:
+                stories_stats = ss.json()
+                rs = requests.get(USER_URL + '/reactions/stats/user/{}'.format(id_user))
+                if rs.status_code < 300:
+                    reactions_stats = rs.json()
+                else:
+                    reactions_stats = {"tot_num_reactions": 0, "avg_reactions": 0.0}
 
-            stats = {'follower_stats': followers_stats, 'stories_stats': stories_stats,
-                     'reactions_stats': reactions_stats}
+                stats = {'follower_stats': followers_stats, 'stories_stats': stories_stats,
+                         'reactions_stats': reactions_stats}
 
-            return render_template("wall.html", my_wall=(current_user.id == user['id']), not_found=False,
-                                   user_info=user, stats=stats, home_url=GATEWAY_URL)
-        else:
-            flash("Can't retrieve stories stats")
-            return redirect(url_for('gateway._home'))
+                return render_template("wall.html", my_wall=(current_user.id == user['id']), not_found=False,
+                                       user_info=user, stats=stats, home_url=GATEWAY_URL)
+
+        flash("Can't retrieve stories stats")
+        return redirect(url_for('gateway._home'))
     else:
         return render_template("wall.html", not_found=True, home_url=GATEWAY_URL)
 
 
-# TODO
 # The operation to follow a specific user
 @usersapi.operation('followUser')
 @login_required
 def _follow_user(id_user):
-    x = requests.post(USER_URL + '/users/' + id_user + '/follow')
-
+    x = requests.post(USER_URL + '/users/{}/follow?current_user_id={}'.format(id_user, current_user.id))
+    print(x.status_code)
     if check_service_up(x):
+        print("AAA")
         body = x.json()
-        if x.status_code < 300:
+        if x.status_code <= 500:
             flash(body['description'], 'error')
 
-    return render_template("wall.html", home_url=GATEWAY_URL)
+    return redirect(url_for('users._get_user', id_user=id_user))
 
 
-# TODO
 # The operation to unfollow a specific user
 @usersapi.operation('unfollowUser')
 @login_required
 def _unfollow_user(id_user):
-    x = requests.post(USER_URL + '/users/' + id_user + '/unfollow')
+    x = requests.post(USER_URL + '/users/{}/unfollow?current_user_id={}'.format(id_user, current_user.id))
 
     if check_service_up(x):
         body = x.json()
-        if x.status_code < 300:
+        if x.status_code <= 500:
             flash(body['description'], 'error')
 
-    return render_template("wall.html", home_url=GATEWAY_URL)
+    return redirect(url_for('users._get_user', id_user=id_user))
 
 
 # Get a list of all the followers of a specified user
 @usersapi.operation('getFollowers')
 def _get_followers(id_user):
     x = requests.get(USER_URL + '/users/' + id_user + '/followers')
-    data = None
+    followers = []
 
     if check_service_up(x):
-        data = x.json()
+        followers = x.json()
 
-    return render_template("followers.html", data=data, home_url=GATEWAY_URL)
+    return render_template("followers.html", users=followers, home_url=GATEWAY_URL)
 
 
 # Get all the posted stories of a specified user
