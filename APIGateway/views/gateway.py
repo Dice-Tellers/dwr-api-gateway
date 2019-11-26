@@ -9,6 +9,7 @@ from werkzeug.exceptions import BadRequestKeyError
 
 from APIGateway.classes.User import User
 from APIGateway.forms import LoginForm, UserForm, StoryForm
+from APIGateway.urls import *
 
 # Path where the .yaml file are
 yml_path = os.path.join(os.path.dirname(__file__), '..', 'yamls')
@@ -18,25 +19,6 @@ authapi = SwaggerBlueprint('gateway', '__name__', swagger_spec=os.path.join(yml_
 usersapi = SwaggerBlueprint('users', '__name__', swagger_spec=os.path.join(yml_path, 'users-api.yaml'))
 diceapi = SwaggerBlueprint('dice', '__name__', swagger_spec=os.path.join(yml_path, 'dice-api.yaml'))
 storiesapi = SwaggerBlueprint('stories', '__name__', swagger_spec=os.path.join(yml_path, 'stories-api.yaml'))
-
-# Each microservice will be hosted in 127.0.0.1, but on different ports
-HOME_URL = 'http://127.0.0.1'
-
-# The URL of the API Gateway
-GATEWAY_URL = HOME_URL + ':5000/'
-
-# Ports for other microservices
-USER_PORT = ':5001'
-DICE_PORT = ':5002'
-STORY_PORT = ':5003'
-REACTION_PORT = ':5004'
-
-# URLS for other microservices
-USER_URL = HOME_URL + USER_PORT
-DICE_URL = HOME_URL + DICE_PORT
-STORY_URL = HOME_URL + STORY_PORT
-REACTION_URL = HOME_URL + REACTION_PORT
-
 
 #               Auth microservice
 
@@ -170,19 +152,32 @@ def _get_all_users():
 # Renders a page (wall.html) with the wall of a specified user
 @usersapi.operation('getUser')
 def _get_user(id_user):
+    u = requests.get(HOME_URL + USER_PORT + '/users/{}'.format(id_user))
 
-    # Wall requires both the user and the stories
-    data = None
-    stories = []
-    # TODO: invert s and x and check if x < 200 to do s maybe?
-    s = requests.get(STORY_URL + '/users/' + id_user + '/stories')
-    x = requests.get(USER_URL + '/users/' + id_user)
+    if u.status_code < 300:
+        user = u.json()
+        fs = requests.get(HOME_URL + USER_PORT + '/users/{}/stats'.format(id_user))
+        followers_stats = fs.json()
 
-    if check_service_up(s) and check_service_up(x):
-        data = x.json()
-        stories = s.json()
+        if fs.status_code < 300:
+            ss = requests.get(HOME_URL + STORY_PORT + '/stories/stats/{}'.format(id_user))
+            stories_stats = ss.json()
+            rs = requests.get(HOME_URL + REACTION_PORT + '/reactions/stats/user/{}'.format(id_user))
+            if rs.status_code < 300:
+                reactions_stats = rs.json()
+            else:
+                reactions_stats = {"tot_num_reactions": 0, "avg_reactions": 0.0}
 
-    return render_template("wall.html", data=data, stories=stories, home_url=GATEWAY_URL)
+            stats = {'follower_stats': followers_stats, 'stories_stats': stories_stats,
+                     'reactions_stats': reactions_stats}
+
+            return render_template("wall.html", my_wall=(current_user.id == user['id']), not_found=False,
+                                   user_info=user, stats=stats, home_url=GATEWAY_URL)
+        else:
+            flash("Can't retrieve stories stats")
+            return redirect(url_for('gateway._home'))
+    else:
+        return render_template("wall.html", not_found=True, home_url=GATEWAY_URL)
 
 
 # TODO
@@ -233,14 +228,12 @@ def _get_followers(id_user):
 # Get all the posted stories of a specified user
 @usersapi.operation('getStoriesOfUser')
 def _get_stories_of_user(id_user):
+    s = requests.get(HOME_URL + STORY_PORT + '/users/{}/stories'.format(id_user))
+    stories = []
+    if s.status_code < 300:
+        stories = s.json()
 
-    x = requests.get(USER_URL + '/users/' + id_user + '/stories')
-    data = None
-
-    if check_service_up(x):
-        data = x.json()
-
-    return render_template("user_stories.html", data=data, home_url=GATEWAY_URL)
+    return render_template("user_stories.html", stories=stories, home_url=GATEWAY_URL)
 
 
 #                   Dice microservice
@@ -370,14 +363,12 @@ def _get_range():
 @storiesapi.operation('getDrafts')
 @login_required
 def _get_drafts():
+    s = requests.get(HOME_URL + STORY_PORT + '/stories/drafts?user_id={}'.format(current_user.id))
+    stories = []
+    if s.status_code < 300:
+        stories = s.json()
 
-    x = requests.get(STORY_URL + '/stories/getDrafts')
-    data = None
-
-    if check_service_up(x):
-        data = x.json()
-
-    return render_template("drafts.html", data=data, home_url=GATEWAY_URL)
+    return render_template("drafts.html", drafts=stories, home_url=GATEWAY_URL)
 
 
 # Renders the Story page (story.html) with the specified story
