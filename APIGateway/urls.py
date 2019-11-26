@@ -1,25 +1,39 @@
 # Global URLS for extensibility
+import os
 
-HOME_URL = "http://127.0.0.1:5000/"
+from flask import flash, redirect, url_for
 
-REGISTER_URL = HOME_URL + "users/create"
-LOGIN_URL = HOME_URL + "users/login"
-LOGOUT_URL = HOME_URL + "users/logout"
-USERS_URL = HOME_URL + "users"
+HOME_URL = 'http://127.0.0.1'
+GATEWAY_URL = HOME_URL + ':5000/'
 
-READ_URL = HOME_URL + "stories"
-SETTINGS_URL = HOME_URL + "stories/new/settings"
-ROLL_URL = HOME_URL + "stories/new/roll"
-WRITE_URL = HOME_URL + "stories/new/write"
-REACTION_URL = HOME_URL + "stories/{}/react"
-LATEST_URL = HOME_URL + "stories/latest"
-RANGE_URL = HOME_URL + "stories/range"
-RANDOM_URL = HOME_URL + "stories/random"
+USER_PORT = ':5001'
+DICE_PORT = ':5002'
+STORY_PORT = ':5003'
+REACTION_PORT = ':5004'
 
-SEARCH_URL = HOME_URL + "search"
+USER_URL = HOME_URL + USER_PORT
+DICE_URL = HOME_URL + DICE_PORT
+STORY_URL = HOME_URL + STORY_PORT
+REACTION_URL = HOME_URL + REACTION_PORT
+
 
 # Database in memory
 TEST_DB = 'sqlite:///:memory:'
 
 # Database "storytellers.db"
 DEFAULT_DB = 'sqlite:///storytellers.db'
+
+# Path where the .yaml file are
+YML_PATH = os.path.join(os.path.dirname(__file__), 'yamls')
+
+
+def check_service_up(response):
+    if response.status_code == 500:
+        flash('The requested microservice has encountered an Internal Server error.', 'error')
+        return False
+    return True
+
+
+def service_not_up():
+    flash('A requested microservice is not up', 'error')
+    return redirect(url_for('gateway._home'))

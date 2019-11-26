@@ -16,48 +16,43 @@ paths:
       operationId: home
       responses:
         '200':
-          description: getHomePage
-          
+          description: OK
+
   /register:
     get:
       operationId: getRegisterPage
-      summary: blabla
-      description: blabla
+      description: Renders the page where it's possible to register a new user
       responses:
         '200':
           description: OK
     post:
       operationId: register
-      summary: blabla
-      description: blabla
+      description: Operation to register a new user
       responses:
         '200':
           description: OK
-          
+
   /login:
     get:
       operationId: getLoginPage
-      summary: blabla
-      description: blabla
+      description: Renders the page where it's possible to login an already registered user
       responses:
         '200':
           description: OK
     post:
       operationId: login
-      summary: Actually login
-      description: blabla
+      description: Operation to login a registered user
       responses:
         '200':
-          description: sei loggato (forse)
-            
+          description: OK
+
   /logout:
     post:
       operationId: logout
-      summary: blabla
-      description: blabla
+      description: Operation to logout a logged in user
       responses:
         '200':
-          description: sei sloggato (forse)
+          description: OK
 
   /search:
     get:
@@ -85,4 +80,3 @@ paths:
           description: An empty JSON array
         '400':
           description: Error with query parameter
-          

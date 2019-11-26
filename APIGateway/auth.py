@@ -1,11 +1,10 @@
 import functools
-import json
 
 import requests
 from flask_login import LoginManager, current_user
 
 from APIGateway.classes.User import User
-from APIGateway.views.gateway import USER_PORT, HOME_URL
+from APIGateway.urls import USER_URL, check_service_up
 
 login_manager = LoginManager()
 
@@ -23,9 +22,10 @@ def admin_required(func):
 @login_manager.user_loader
 def load_user(user_id):
     user = None
-    x = requests.get(HOME_URL + USER_PORT + '/users/{}'.format(user_id))
-    body = x.json()
-    if x.status_code < 300:
-        user = User(body['id'], body['firstname'], body['lastname'], body['email'])
-        user._authenticated = True
+    x = requests.get(USER_URL + '/users/{}'.format(user_id))
+    if check_service_up(x):
+        body = x.json()
+        if x.status_code < 300:
+            user = User(body['id'], body['firstname'], body['lastname'], body['email'])
+            user._authenticated = True
     return user

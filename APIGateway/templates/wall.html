@@ -34,17 +34,26 @@
                         <b>Statistics:</b>
                         <table style="margin: 0 auto; text-align: center;">
                             <tr>
-                                <td>{{ stats[2][1] }}</td>
+                                <td>{{ stats["stories_stats"]["num_stories"] }}</td>
                                 <td rowspan="2">&nbsp;</td>
-                                <td>{{ stats[1][1] }}</td>
+                                <td>{{ stats['reactions_stats']['tot_num_reactions'] }}</td>
                                 <td rowspan="2">&nbsp;</td>
-                                <td>{{ stats[0][1] }}</td>
+                                <td>{{ stats['stories_stats']['tot_num_dice'] }}</td>
                                 <td rowspan="2">&nbsp;</td>
-                                <td>{{ stats[3][1] }}</td>
+                                <td>{{ stats['follower_stats']['num_followers'] }}</td>
+                                <td rowspan="2">&nbsp;</td>
+                                <td>{{ stats['follower_stats']['followers_last_month'] }}</td>
+                                <td rowspan="2">&nbsp;</td>
+                                <td>{{ stats['reactions_stats']['avg_reactions'] }}</td>
+                                <td rowspan="2">&nbsp;</td>
+                                <td>{{ stats['stories_stats']['avg_dice'] }}</td>
                             </tr>
                             <tr>
                                 <td><b># Stories</b></td>
                                 <td><b># Reactions</b></td>
+                                <td><b># Total Dice</b></td>
+                                <td><b># Followers</b></td>
+                                <td><b>Followers of last month</b></td>
                                 <td><b>Avg reactions per story</b></td>
                                 <td><b>Avg dice per story</b></td>
                             </tr>
@@ -53,7 +62,7 @@
                     <div class="row mb-3" style="margin: 0 auto; text-align: center;">
                         <div class="col-xl-12 col-sm-12 justify-content-center" style="margin-top: 25px;">
                             <a class="btn btn-primary" href="{{ home_url }}users/{{ user_info.id }}/stories"><span class="book-open">My stories</span></a>
-                            <a class="btn btn-secondary" href="{{ home_url }}users/{{ user_info.id }}/drafts"><span class="firstdraft">My drafts</span></a>
+                            <a class="btn btn-secondary" href="{{ home_url }}stories/drafts"><span class="firstdraft">My drafts</span></a>
                             <br/><br/>
                             <form action="{{ home_url }}users/{{ user_info.id }}/followers" method="get">
                                 <input type="submit" class="btn btn-primary"
@@ -107,13 +116,13 @@
                         <b>Statistics:</b>
                         <table style="margin: 0 auto; text-align: center;">
                             <tr>
-                                <td>{{ stats[1][1] }}</td>
+                                <td>{{ stats.stories_stats.num_stories }}</td>
                                 <td rowspan="2">&nbsp;</td>
-                                <td>{{ stats[0][1] }}</td>
+                                <td>{{ stats.follower_stats.num_followers }}</td>
                             </tr>
                             <tr>
                                 <td><b># Stories</b></td>
-                                <td><b># Reactions</b></td>
+                                <td><b># Followers</b></td>
                             </tr>
                         </table>
                     </div>
@@ -148,13 +157,13 @@
                     <b>Statistics:</b>
                     <table style="margin: 0 auto; text-align: center;">
                         <tr>
-                            <td>{{ stats[1][1] }}</td>
+                            <td>{{ stats.stories_stats.num_stories }}</td>
                             <td rowspan="2">&nbsp;</td>
-                            <td>{{ stats[0][1] }}</td>
+                            <td>{{ stats.follower_stats.num_followers }}</td>
                         </tr>
                         <tr>
                             <td><b># Stories</b></td>
-                            <td><b># Reactions</b></td>
+                            <td><b># Followers</b></td>
                         </tr>
                     </table>
                 </div>

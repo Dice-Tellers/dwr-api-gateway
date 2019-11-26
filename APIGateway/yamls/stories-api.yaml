@@ -14,7 +14,6 @@ paths:
   /stories:
     get:
       operationId: getAll
-      summary: Get all the stories
       description: Get all the stories without any filter.
       responses:
         '200':
@@ -23,7 +22,6 @@ paths:
   /stories/latest:
     get:
       operationId: getLatest
-      summary: Get last story per user
       description: Get the most recent story for each registered user.
       responses:
         '200':
@@ -32,7 +30,6 @@ paths:
   /stories/range:
     get:
       operationId: getRange
-      summary: Get the stories between dates
       description: Get all the stories that have been published between a (optional) begin date and a (optional) end date.
       responses:
         '200':
@@ -48,17 +45,45 @@ paths:
   /stories/drafts:
     get:
       operationId: getDrafts
-      summary: Get all your drafts
-      description: Get all your drafts.
+      description: Operation to get all your drafts.
       responses:
         '200':
           description: OK
-          
+
   /stories/{id_story}:
     get:
       operationId: getStory
-      summary: Get a specific story
       description: Get a non-draft specific story.
+      responses:
+        '200':
+          description: OK
+      parameters:
+        - in: path
+          name: id_story
+          required: true
+          type: integer
+
+  /stories/{id_story}/react/{reaction_caption}:
+    get:
+      operationId: reactStory
+      description: Opeartion to react a story
+      responses:
+        '200':
+          description: OK
+      parameters:
+        - in: path
+          name: id_story
+          required: true
+          type: integer
+        - in: path
+          name: reaction_caption
+          required: true
+          type: string
+
+  /stories/{id_story}/delete:
+    post:
+      operationId: deleteStory
+      description: Opeartion to delete a story
       responses:
         '200':
           description: OK
@@ -71,16 +96,14 @@ paths:
   /stories/new/write:
     get:
       operationId: getWritePage
-      summary: blabla
-      description: blabla
+      description: Renders the page where it's possible to write a story
       responses:
         '200':
           description: OK
 
     post:
       operationId: writeNew
-      summary: Write a new story
-      description: Write a new story.
+      description: Operation to write a new story.
       responses:
         '200':
           description: OK
@@ -88,8 +111,7 @@ paths:
   /stories/new/write/{id_story}:
     get:
       operationId: getDraftPage
-      summary: blabla
-      description: blabla
+      description: Renders the page where it's possible to complete a previously saved draft
       responses:
         '200':
           description: OK
@@ -101,7 +123,7 @@ paths:
     post:
       operationId: completeDraft
       summary: Complete a draft
-      description: Complete a precedently saved draft.
+      description: Operation to complete a precedently saved draft.
       responses:
         '200':
           description: OK
@@ -114,7 +136,6 @@ paths:
   /stories/random:
     get:
       operationId: getRandom
-      summary: Get a random story
       description: Get a random non-draft story from other authors.
       responses:
         '200':
