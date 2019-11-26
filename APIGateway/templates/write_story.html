@@ -15,7 +15,11 @@
         <div class="col-xs-12 col-sm-8 bg-light cont rounded pb-3" style="padding: 30px">
             <h3 class="text-center">Write your story!</h3><br/>
             <h5>The words are: {{ words }}</h5>
+            {% if id_draft is not none %}
+            <form id="write_story_form" action="{{ home_url }}stories/new/write/{{ id_draft }}" method="POST">
+            {% else %}
             <form id="write_story_form" action="{{ home_url }}stories/new/write" method="POST">
+            {% endif %}
                 {{ form.hidden_tag() }}
                 {% for field in form.display %}
                     <div class="form-group">

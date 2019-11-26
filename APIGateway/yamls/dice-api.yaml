@@ -15,8 +15,7 @@ paths:
   /stories/new/settings:
     get:
       operationId: getSettingsPage
-      summary: blabla
-      description: blabla
+      description: Renders the page where it's possible to choose the set and number of dice
       responses:
         '200':
           description: OK
@@ -24,8 +23,7 @@ paths:
   /stories/new/roll:
     post:
       operationId: getRollPage
-      summary: blabla
-      description: blabla
+      description: Renders the page where it's possible to reroll dice
       responses:
         '200':
-          description: blabla
+          description: OK

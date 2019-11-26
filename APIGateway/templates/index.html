@@ -28,7 +28,11 @@
         <div class="row">
             <div class="col-xs-12 col-sm-12">
                 <h3>Hi {{ current_user.firstname }}!</h3>
+                {% if stories is none or stories|length < 1 %}
+                    <h4>You have no stories!</h4>
+                {% else %}
                 <h4>These are your stories:</h4>
+                {% endif %}
             </div>
         </div>
         {% set color = ['bg-info', 'bg-success', 'bg-danger', 'bg-secondary'] %}
@@ -47,8 +51,7 @@
                           style="text-align: center; display:inline-block; margin-right: 30px;" method="GET">
                         <button class="btn btn-primary" type="submit">OPEN</button>
                     </form>
-                    <form action="/stories/delete/{{ story.id }}" style="display:inline-block; text-align: center;"
-                          method="POST">
+                    <form action="/stories/{{ story.id }}/delete" style="display:inline-block; text-align: center;" method="POST">
                         <button class="btn btn-secondary" type="submit">DELETE</button>
                     </form>
                 </div>
