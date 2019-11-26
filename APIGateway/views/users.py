@@ -94,7 +94,7 @@ def _get_followers(id_user):
 # Get all the posted stories of a specified user
 @usersapi.operation('getStoriesOfUser')
 def _get_stories_of_user(id_user):
-    s = requests.get(STORY_URL + '/users/{}/stories'.format(id_user))
+    s = requests.get(STORY_URL + '/stories/users/{}'.format(id_user))
     stories = []
     if s.status_code < 300:
         stories = s.json()

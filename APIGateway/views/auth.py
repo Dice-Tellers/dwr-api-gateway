@@ -2,7 +2,7 @@ import json
 
 import requests
 from flakon import SwaggerBlueprint
-from flask import render_template, redirect, url_for, request
+from flask import render_template, request
 from flask_login import current_user, logout_user, login_required, login_user
 
 from APIGateway.classes.User import User
@@ -118,13 +118,39 @@ def _logout():
     return redirect(url_for("gateway._home"))
 
 
-# TODO Search
+@authapi.operation('getSearchPage')
+def _get_search():
+    return render_template('search.html', home_url=GATEWAY_URL)
+
+
 @authapi.operation('search')
 def _search():
+    form = request.form
+    query = form['query']
+
     try:
-        x = requests.get(USER_URL + '/search')
+        # Search in users
+        users_req = requests.get(USER_URL + '/search?query=' + query)
+        users_data = users_req.json()
+        # Search in stories
+        stories_req = requests.get(USER_URL + '/search?query=' + query)
+        stories_data = stories_req.json()
     except requests.exceptions.ConnectionError:
         return service_not_up()
 
-    data = x.json()
-    return render_template("search.html", data=data, home_url=GATEWAY_URL)
+    ok_response = [200, 204]
+
+    # Check if both are succesfull
+    if users_req.status_code == 204 and stories_req.status_code == 204:
+        flash("No match for the searched string", 'error')
+        context_vars = {"list_of_users": users_data, "list_of_stories": stories_data,
+                        "home_url": GATEWAY_URL}
+        return render_template("search.html", **context_vars)
+    elif users_req.status_code not in ok_response or \
+            stories_req.status_code not in ok_response:
+        flash(stories_data['description'], 'error')
+        return redirect(url_for('gateway._search'), 304)
+    else:
+        context_vars = {"list_of_users": users_data, "list_of_stories": stories_data,
+                        "home_url": GATEWAY_URL}
+        return render_template("search.html", **context_vars)

@@ -2,9 +2,8 @@ import datetime
 
 import flask_testing
 
-from monolith.app import create_app
-from monolith.database import User, db, Story
-from monolith.urls import TEST_DB
+from APIGateway.app import create_app
+from APIGateway.urls import TEST_DB
 
 
 class TestReaction(flask_testing.TestCase):
@@ -14,69 +13,6 @@ class TestReaction(flask_testing.TestCase):
         global app
         app = create_app(TEST_DB)
         return app
-
-    def setUp(self) -> None:
-        with app.app_context():
-            # user for login
-            example = User()
-            example.firstname = 'Admin'
-            example.lastname = 'Admin'
-            example.email = 'example@example.com'
-            example.dateofbirth = datetime.datetime(2020, 10, 5)
-            example.is_admin = True
-            example.set_password('admin')
-            db.session.add(example)
-            db.session.commit()
-
-            # user for login
-            example = User()
-            example.firstname = 'First'
-            example.lastname = 'Exe'
-            example.email = 'first@example.com'
-            example.dateofbirth = datetime.datetime(2020, 10, 5)
-            example.is_admin = False
-            example.set_password('first')
-            db.session.add(example)
-            db.session.commit()
-
-            # user for login
-            example = User()
-            example.firstname = 'Second'
-            example.lastname = 'Exe'
-            example.email = 'second@example.com'
-            example.dateofbirth = datetime.datetime(2020, 10, 5)
-            example.is_admin = False
-            example.set_password('second')
-            db.session.add(example)
-            db.session.commit()
-
-            # user for login
-            example = User()
-            example.firstname = 'First'
-            example.lastname = 'What'
-            example.email = 'what@example.com'
-            example.dateofbirth = datetime.datetime(2020, 10, 5)
-            example.is_admin = False
-            example.set_password('what')
-            db.session.add(example)
-            db.session.commit()
-
-            # reacted story
-            test_story = Story()
-            test_story.text = "Test story from admin user"
-            test_story.author_id = 1
-            test_story.is_draft = 0
-            test_story.figures = "#admin#from#"
-            db.session.add(test_story)
-            db.session.commit()
-
-            test_story = Story()
-            test_story.text = "Test story from bubble sort"
-            test_story.author_id = 1
-            test_story.is_draft = 0
-            test_story.figures = "#bubble#from#"
-            db.session.add(test_story)
-            db.session.commit()
 
     def test_search(self):
         # Search for an existing story
