@@ -3,12 +3,13 @@ import os
 
 import requests
 from flakon import SwaggerBlueprint
-from flask import render_template, request, redirect, url_for, flash, session, jsonify
+from flask import render_template, request, redirect, url_for, flash, session
 from flask_login import (login_user, logout_user, login_required, current_user)
 from werkzeug.exceptions import BadRequestKeyError
 
 from APIGateway.classes.User import User
 from APIGateway.forms import LoginForm, UserForm, StoryForm
+from APIGateway.urls import *
 
 yml_path = os.path.join(os.path.dirname(__file__), '..', 'yamls')
 
@@ -16,14 +17,6 @@ authapi = SwaggerBlueprint('gateway', '__name__', swagger_spec=os.path.join(yml_
 usersapi = SwaggerBlueprint('users', '__name__', swagger_spec=os.path.join(yml_path, 'users-api.yaml'))
 diceapi = SwaggerBlueprint('dice', '__name__', swagger_spec=os.path.join(yml_path, 'dice-api.yaml'))
 storiesapi = SwaggerBlueprint('stories', '__name__', swagger_spec=os.path.join(yml_path, 'stories-api.yaml'))
-
-HOME_URL = 'http://127.0.0.1'
-GATEWAY_URL = HOME_URL + ':5000/'
-
-USER_PORT = ':5001'
-DICE_PORT = ':5002'
-STORY_PORT = ':5003'
-REACTION_PORT = ':5004'
 
 
 #               Auth
@@ -114,27 +107,31 @@ def _get_all_users():
 
 @usersapi.operation('getUser')
 def _get_user(id_user):
-    user = requests.get(HOME_URL + USER_PORT + '/users/' + id_user)
-    data = user.json()
-    user_endpoint = requests.get(HOME_URL + USER_PORT + '/users/' + id_user + '/stats')
-    followers_stats = user_endpoint.json()
+    u = requests.get(HOME_URL + USER_PORT + '/users/{}'.format(id_user))
 
-    # user_endpoint returns 404 if the user id doesn't exist
-    print('Status code calling user service: ' + str(user_endpoint.status_code))
-    if user_endpoint.status_code < 300:
-        stories_endpoint = requests.get(HOME_URL + STORY_PORT + '/stories/stats/' + id_user)
-        stories_stats = stories_endpoint.json()
-        reactions_endpoint = requests.get(HOME_URL + REACTION_PORT + '/reactions/stats/user/' + id_user)
-        if reactions_endpoint.status_code < 300:
-            reactions_stats = reactions_endpoint.json()
+    if u.status_code < 300:
+        user = u.json()
+        fs = requests.get(HOME_URL + USER_PORT + '/users/{}/stats'.format(id_user))
+        followers_stats = fs.json()
+
+        if fs.status_code < 300:
+            ss = requests.get(HOME_URL + STORY_PORT + '/stories/stats/{}'.format(id_user))
+            stories_stats = ss.json()
+            rs = requests.get(HOME_URL + REACTION_PORT + '/reactions/stats/user/{}'.format(id_user))
+            if rs.status_code < 300:
+                reactions_stats = rs.json()
+            else:
+                reactions_stats = {"tot_num_reactions": 0, "avg_reactions": 0.0}
+
+            stats = {'follower_stats': followers_stats, 'stories_stats': stories_stats,
+                     'reactions_stats': reactions_stats}
+
+            return render_template("wall.html", my_wall=(current_user.id == user['id']), not_found=False,
+                                   user_info=user, stats=stats, home_url=GATEWAY_URL)
         else:
-            reactions_stats = {"tot_num_reactions": 0, "avg_reactions": 0.0}
-        
-        json_stats = {'follower_stats': followers_stats, 'stories_stats': stories_stats, 'reactions_stats': reactions_stats}
-        
-        return render_template("wall.html", user_info=data, stats=jsonify(json_stats), home_url=GATEWAY_URL)
+            flash("Can't retrieve stories stats")
+            return redirect(url_for('gateway._home'))
     else:
-        flash('erur', 'error')
         return render_template("wall.html", not_found=True, home_url=GATEWAY_URL)
 
 
@@ -170,10 +167,12 @@ def _get_followers(id_user):
 
 @usersapi.operation('getStoriesOfUser')
 def _get_stories_of_user(id_user):
-    x = requests.get(HOME_URL + USER_PORT + '/users/' + id_user + '/stories')
-    data = x.json()
+    s = requests.get(HOME_URL + STORY_PORT + '/users/{}/stories'.format(id_user))
+    stories = []
+    if s.status_code < 300:
+        stories = s.json()
 
-    return render_template("user_stories.html", data=data, home_url=GATEWAY_URL)
+    return render_template("user_stories.html", stories=stories, home_url=GATEWAY_URL)
 
 
 #                   Dice
@@ -262,10 +261,12 @@ def _get_range():
 @storiesapi.operation('getDrafts')
 @login_required
 def _get_drafts():
-    x = requests.get(HOME_URL + STORY_PORT + '/stories/getDrafts')
-    data = x.json()
+    s = requests.get(HOME_URL + STORY_PORT + '/stories/drafts?user_id={}'.format(current_user.id))
+    stories = []
+    if s.status_code < 300:
+        stories = s.json()
 
-    return render_template("drafts.html", data=data, home_url=GATEWAY_URL)
+    return render_template("drafts.html", drafts=stories, home_url=GATEWAY_URL)
 
 
 @storiesapi.operation('getStory')
