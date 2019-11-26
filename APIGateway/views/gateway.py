@@ -86,7 +86,6 @@ def _login():
         user = User(body['id'], body['firstname'], body['lastname'], body['email'])
         login_user(user)
         return redirect(url_for('gateway._home'))
-
     else:
         flash(body['description'], 'error')  # e refresh stessa pagina
         return redirect(url_for('gateway._get_log'))
@@ -125,7 +124,7 @@ def _search():
     elif users_req.status_code not in ok_response or \
         stories_req.status_code not in ok_response:
         flash(stories_data['descrption'], 'error')
-        return redirect(url_for('gateway._search'), 304)
+        return redirect(url_for('gateway._search'))
     else:
         context_vars = {"list_of_users": users_data, "list_of_stories": stories_data,
                         "home_url": GATEWAY_URL}
