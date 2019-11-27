@@ -21,10 +21,7 @@ def _home():
 
     # If there's a logged user, we get his stories
     if current_user is not None and hasattr(current_user, 'id'):
-        try:
-            s = requests.get(STORY_URL + '/stories/users/{}'.format(current_user.id))
-        except requests.exceptions.ConnectionError:
-            return service_not_up()
+        s = requests.get(STORY_URL + '/stories/users/{}'.format(current_user.id))
 
         if check_service_up(s):
             if s.status_code < 300:

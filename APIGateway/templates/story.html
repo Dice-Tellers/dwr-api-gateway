@@ -10,7 +10,12 @@
 </head>
 <body>
 {% include 'navbar.html' %}
-{% if not exists %}
+{% if not current_user.is_authenticated %}
+    <div style="margin: 0 auto; text-align: center; margin-top: 50px;">
+        <h1>:(</h1>
+        <h2>You must first login to view the story!</h2>
+    </div>
+{% elif not exists %}
     <div style="margin: 0 auto; text-align: center; margin-top: 50px;">
         <h1>:(</h1>
         <h2>Sorry the story doesn't exist!</h2>

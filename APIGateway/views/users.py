@@ -57,7 +57,9 @@ def _get_user(id_user):
 
                 stats = {'follower_stats': followers_stats, 'stories_stats': stories_stats,
                          'reactions_stats': reactions_stats}
-
+                if current_user is None or not hasattr(current_user, 'id'):
+                    return render_template("wall.html", my_wall=False, not_foudn=False, user_info=user,
+                                           stats=stats, home_url=GATEWAY_URL)
                 return render_template("wall.html", my_wall=(current_user.id == user['id']), not_found=False,
                                        user_info=user, stats=stats, home_url=GATEWAY_URL)
 
